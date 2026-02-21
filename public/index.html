@@ -2,54 +2,327 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Fleet Management System</title>
+  <title>Fleet Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    body{font-family:system-ui,Arial;padding:20px;max-width:900px;margin:auto}
-    h1{margin-top:0}
-    .box{padding:12px;border:1px solid #ddd;margin-bottom:12px;border-radius:6px}
-    pre{background:#f6f8fa;padding:10px}
+    :root{--bg:#f4f6fb;--card:#ffffff;--muted:#6b7280;--primary:#0b5cff;--danger:#ff4d4f}
+    *{box-sizing:border-box}
+    body{font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; background:var(--bg); color:#0f172a}
+    .wrap{max-width:1200px;margin:22px auto;padding:18px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:44px;height:44px;display:inline-grid;place-items:center;border-radius:10px;background:linear-gradient(135deg,var(--primary),#0066ff);color:#fff;font-weight:700}
+    h1{font-size:1.2rem;margin:0}
+    .top-actions{display:flex;gap:8px;align-items:center}
+    .search{padding:8px 12px;border-radius:10px;border:1px solid #e6edf8;background:#fff}
+    .tabs{margin-top:18px;display:flex;gap:8px}
+    .tab{padding:8px 12px;border-radius:10px;background:transparent;border:1px solid transparent;color:var(--muted);cursor:pointer}
+    .tab.active{background:linear-gradient(90deg,var(--primary),#0066ff);color:#fff}
+
+    .cards{display:flex;gap:12px;margin-top:18px}
+    .card{flex:1;background:var(--card);padding:14px;border-radius:10px;box-shadow:0 4px 10px rgba(14,30,37,0.04);display:flex;justify-content:space-between;align-items:center}
+    .card .num{font-size:1.3rem;font-weight:600}
+    .card .label{color:var(--muted);font-size:0.85rem}
+
+    .content{display:grid;grid-template-columns:1fr 360px;gap:16px;margin-top:16px}
+    .panel{background:var(--card);padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(14,30,37,0.04)}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{padding:10px;text-align:left;border-bottom:1px solid #f1f5f9;font-size:0.95rem}
+    thead th{background:transparent;color:var(--muted);font-size:0.85rem}
+    tr:hover td{background:#fbfdff}
+
+    .controls{display:flex;gap:8px;align-items:center}
+    .btn{padding:8px 10px;border-radius:8px;border:1px solid rgba(15,23,42,0.06);background:#fff;cursor:pointer}
+    .btn.primary{background:var(--primary);color:#fff;border:none}
+    .btn.ghost{background:transparent;border:1px dashed #e6eefc}
+    .btn.danger{background:transparent;border:1px solid rgba(255,77,79,0.12);color:var(--danger)}
+
+    .form-row{display:flex;flex-direction:column;gap:8px}
+    input,select{padding:10px;border-radius:8px;border:1px solid #e6eefc;background:#fff}
+    label{font-size:0.85rem;color:#0f172a}
+
+    .small{font-size:0.85rem;color:var(--muted)}
+
+    /* pagination */
+    .pager{display:flex;gap:6px;align-items:center;margin-top:8px}
+
+    /* modal */
+    .modal-backdrop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(8,15,25,0.45)}
+    .modal{background:var(--card);padding:16px;border-radius:10px;min-width:320px}
+
+    @media (max-width:980px){.content{grid-template-columns:1fr}.cards{flex-direction:column}}
   </style>
 </head>
 <body>
-  <h1>Fleet Management System</h1>
-  <p>Simple frontend to try API endpoints.</p>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">FM</div>
+        <div>
+          <h1>Fleet Management</h1>
+          <div class="small">Manage vehicles, drivers and trips</div>
+        </div>
+      </div>
 
-  <div class="box">
-    <h3>Vehicles</h3>
-    <button id="loadVehicles">Load Vehicles</button>
-    <pre id="vehicles"></pre>
+      <div class="top-actions">
+        <input id="globalSearch" class="search" placeholder="Search table..." />
+        <button id="refreshAll" class="btn">Refresh</button>
+        <div id="apiBadge" class="small" style="margin-left:12px;color:var(--muted)">API: ?</div>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="vehicles">Vehicles</button>
+      <button class="tab" data-tab="drivers">Drivers</button>
+      <button class="tab" data-tab="trips">Trips</button>
+    </div>
+
+    <div class="cards" id="statCards">
+      <div class="card"><div><div class="label">Vehicles</div><div class="num" id="countVehicles">—</div></div><div class="small">Available</div></div>
+      <div class="card"><div><div class="label">Drivers</div><div class="num" id="countDrivers">—</div></div><div class="small">Active</div></div>
+      <div class="card"><div><div class="label">Trips</div><div class="num" id="countTrips">—</div></div><div class="small">Ongoing</div></div>
+    </div>
+
+    <div class="content">
+      <div id="mainPanel" class="panel">
+        <!-- table and controls rendered here -->
+      </div>
+
+      <aside class="panel">
+        <div id="formPanel">
+          <!-- form goes here -->
+        </div>
+      </aside>
+    </div>
   </div>
 
-  <div class="box">
-    <h3>Drivers</h3>
-    <button id="loadDrivers">Load Drivers</button>
-    <pre id="drivers"></pre>
-  </div>
-
-  <div class="box">
-    <h3>Trips</h3>
-    <button id="loadTrips">Load Trips</button>
-    <pre id="trips"></pre>
-  </div>
+  <!-- modal backdrop -->
+  <div id="modal" class="modal-backdrop"><div class="modal" role="dialog"><div id="modalContent"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="modalCancel" class="btn">Cancel</button><button id="modalConfirm" class="btn danger">Delete</button></div></div></div>
 
   <script>
-    const base = '/api';
-    document.getElementById('loadVehicles').onclick = async () => {
-      const res = await fetch(base + '/vehicles');
-      const data = await res.json();
-      document.getElementById('vehicles').innerText = JSON.stringify(data, null, 2);
-    };
-    document.getElementById('loadDrivers').onclick = async () => {
-      const res = await fetch(base + '/drivers');
-      const data = await res.json();
-      document.getElementById('drivers').innerText = JSON.stringify(data, null, 2);
-    };
-    document.getElementById('loadTrips').onclick = async () => {
-      const res = await fetch(base + '/trips');
-      const data = await res.json();
-      document.getElementById('trips').innerText = JSON.stringify(data, null, 2);
-    };
+    // Resolve API base URL dynamically so the same build works for local and production.
+    // Priority: window.__API_BASE__ -> <meta name="api-base"> -> ?api_base=... query -> origin + /api
+    function _stripSlash(url){ return url.replace(/\/+$|\/+$/g, '').replace(/\/$/, ''); }
+    const base = (() => {
+      try{
+        if(window.__API_BASE__) return window.__API_BASE__.replace(/\/+$/,'');
+        const m = document.querySelector('meta[name="api-base"]');
+        if(m && m.content) return m.content.replace(/\/+$/,'');
+        const params = new URLSearchParams(window.location.search);
+        if(params.get('api_base')) return params.get('api_base').replace(/\/+$/,'');
+        if(params.get('apiBase')) return params.get('apiBase').replace(/\/+$/,'');
+        
+        // If opened as a file, default to localhost
+        if (window.location.protocol === 'file:') {
+          return 'http://localhost:5005/api';
+        }
+        
+        // default to same origin /api
+        return new URL('/api', window.location.origin).toString().replace(/\/+$/,'');
+      }catch(e){ return '/api'; }
+    })();
+    // show resolved base for debugging
+    try{ const badge = document.getElementById('apiBadge'); if(badge) badge.innerText = `API: ${base}`; }catch(e){}
+    const tabs = Array.from(document.querySelectorAll('.tab'));
+    const searchInput = document.getElementById('globalSearch');
+    let active = 'vehicles';
+    let lastData = [];
+    let currentPage = 1; const pageSize = 8;
+
+    tabs.forEach(t=>t.addEventListener('click', ()=>{ tabs.forEach(x=>x.classList.remove('active')); t.classList.add('active'); active = t.dataset.tab; currentPage =1; loadAndRender(); renderForm(); }));
+    document.getElementById('refreshAll').addEventListener('click', ()=>{ loadAndRender(); renderForm(); });
+    searchInput.addEventListener('input', ()=>renderTable(lastData));
+
+    // data helpers
+    async function _handleResponse(r){
+      const contentType = r.headers.get('content-type') || '';
+      const text = await r.text();
+      if(!r.ok){
+        // try to parse json message
+        let body = text;
+        try{ if(contentType.includes('application/json')) body = JSON.parse(text); }catch(e){}
+        throw new Error(`${r.status} ${r.statusText} - ${typeof body === 'string' ? body : JSON.stringify(body)}`);
+      }
+      try{ return contentType.includes('application/json') ? JSON.parse(text) : text; }catch(e){ return text; }
+    }
+
+    async function fetchList(resource){
+      try{
+        const r = await fetch(`${base}/${resource}`);
+        return await _handleResponse(r);
+      }catch(e){ console.error('fetchList error', e); throw e; }
+    }
+
+    async function create(resource,p){
+      try{
+        const r = await fetch(`${base}/${resource}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+        return await _handleResponse(r);
+      }catch(e){ console.error('create error', e); throw e; }
+    }
+
+    async function update(resource,id,p){
+      try{
+        const r = await fetch(`${base}/${resource}/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+        return await _handleResponse(r);
+      }catch(e){ console.error('update error', e); throw e; }
+    }
+
+    async function remove(resource,id){
+      try{
+        const r = await fetch(`${base}/${resource}/${id}`,{method:'DELETE'});
+        return await _handleResponse(r);
+      }catch(e){ console.error('remove error', e); throw e; }
+    }
+
+    async function loadAndRender(){
+      try{
+        if(active==='vehicles'){ const data = await fetchList('vehicles'); lastData = data; renderStats(); renderTable(data); }
+        if(active==='drivers'){ const data = await fetchList('drivers'); lastData = data; renderStats(); renderTable(data); }
+        if(active==='trips'){ const data = await fetchList('trips'); lastData = data; renderStats(); renderTable(data); }
+      }catch(e){ document.getElementById('mainPanel').innerHTML = `<div class="small">Error: ${e.message}</div>` }
+    }
+
+    function renderStats(){ document.getElementById('countVehicles').innerText = '—'; document.getElementById('countDrivers').innerText='—'; document.getElementById('countTrips').innerText='—';
+      // compute quick stats from fetched data
+      // we call fetch for each to keep it simple (could be optimized server-side)
+      Promise.all([fetchList('vehicles'),fetchList('drivers'),fetchList('trips')]).then(([v,d,t])=>{
+        document.getElementById('countVehicles').innerText = v.length;
+        document.getElementById('countDrivers').innerText = d.length;
+        document.getElementById('countTrips').innerText = t.length;
+      }).catch(()=>{});
+    }
+
+    function renderTable(data){
+      const container = document.getElementById('mainPanel');
+      const q = (searchInput.value||'').toLowerCase().trim();
+      const filtered = data.filter(item=>{
+        if(!q) return true;
+        return JSON.stringify(item).toLowerCase().includes(q);
+      });
+
+      const total = filtered.length; const pages = Math.max(1, Math.ceil(total/pageSize));
+      if(currentPage>pages) currentPage = pages;
+      const start = (currentPage-1)*pageSize; const slice = filtered.slice(start, start+pageSize);
+
+      let html = '';
+      html += `<div style="display:flex;justify-content:space-between;align-items:center"><div><strong style="font-size:1rem">${capitalize(active)}</strong> <span class="small">(${total})</span></div><div class="controls"><button id="newItem" class="btn primary">New</button><button id="refreshBtn" class="btn">Refresh</button></div></div>`;
+
+      if(active==='vehicles'){
+        html += `<table><thead><tr><th>Make</th><th>Model</th><th>Year</th><th>VIN</th><th>Status</th><th></th></tr></thead><tbody>`;
+        html += slice.map(v=>`<tr data-id="${v._id||v.id}"><td>${esc(v.make)}</td><td>${esc(v.model)}</td><td>${v.year||''}</td><td>${esc(v.vin)}</td><td>${v.status||''}</td><td><button class="btn" data-action="edit">Edit</button> <button class="btn danger" data-action="delete">Delete</button></td></tr>`).join('');
+        html += `</tbody></table>`;
+      }
+
+      if(active==='drivers'){
+        html += `<table><thead><tr><th>Name</th><th>License</th><th>Phone</th><th></th></tr></thead><tbody>`;
+        html += slice.map(d=>`<tr data-id="${d._id||d.id}"><td>${esc(d.name)}</td><td>${esc(d.licenseNumber)}</td><td>${esc(d.phone||'')}</td><td><button class="btn" data-action="edit">Edit</button> <button class="btn danger" data-action="delete">Delete</button></td></tr>`).join('');
+        html += `</tbody></table>`;
+      }
+
+      if(active==='trips'){
+        html += `<table><thead><tr><th>Vehicle</th><th>Driver</th><th>Route</th><th>Status</th><th></th></tr></thead><tbody>`;
+        html += slice.map(t=>{
+          const vehicleLabel = typeof t.vehicle === 'object' ? `${esc(t.vehicle.make||'')} ${esc(t.vehicle.model||'')}` : (t.vehicle||'');
+          const driverLabel = typeof t.driver === 'object' ? esc(t.driver.name||'') : (t.driver||'');
+          return `<tr data-id="${t._id||t.id}"><td>${vehicleLabel}</td><td>${driverLabel}</td><td>${esc(t.origin||'')} → ${esc(t.destination||'')}</td><td>${t.status||''}</td><td><button class="btn" data-action="edit">Edit</button> <button class="btn danger" data-action="delete">Delete</button></td></tr>`;
+        }).join('');
+        html += `</tbody></table>`;
+      }
+
+      // pager
+      html += `<div class="pager"><div class="small">Page</div><div style="display:flex;gap:6px;margin-left:6px"><button id="prevPage" class="btn">‹</button><div class="small">${currentPage} / ${pages}</div><button id="nextPage" class="btn">›</button></div></div>`;
+
+      container.innerHTML = html;
+
+      // hooks
+      document.getElementById('newItem').addEventListener('click', ()=>renderForm({mode:'create'}));
+      document.getElementById('refreshBtn').addEventListener('click', ()=>loadAndRender());
+      container.querySelectorAll('button[data-action]').forEach(b=> b.addEventListener('click', onRowAction));
+      document.getElementById('prevPage').addEventListener('click', ()=>{ if(currentPage>1){currentPage--; renderTable(lastData);} });
+      document.getElementById('nextPage').addEventListener('click', ()=>{ const pages = Math.max(1, Math.ceil(filtered.length/pageSize)); if(currentPage<pages){currentPage++; renderTable(lastData);} });
+    }
+
+    function onRowAction(e){ const tr = e.target.closest('tr'); const id = tr.dataset.id; const action = e.target.dataset.action; const item = lastData.find(x=> (x._id||x.id)===id);
+      if(action==='edit'){ renderForm({mode:'edit', item}); }
+      if(action==='delete'){ showModal(`Delete ${capitalize(active).slice(0,-1)}?`, async ()=>{ await remove(active, id); hideModal(); loadAndRender(); renderForm(); }); }
+    }
+
+    // --- Form rendering ---
+    async function renderForm(opts={}){
+      const area = document.getElementById('formPanel'); const mode = opts.mode||'create'; const item = opts.item||null;
+      if(active==='vehicles') return renderVehicleForm(area, mode, item);
+      if(active==='drivers') return renderDriverForm(area, mode, item);
+      if(active==='trips') return renderTripForm(area, mode, item);
+    }
+
+    function renderVehicleForm(area, mode, item){
+      const id = item? (item._id||item.id):'';
+      area.innerHTML = `<h3 style="margin:0 0 8px">${mode==='edit'?'Edit':'Add'} Vehicle</h3><form id="vehicleForm" class="form-row"><label>Make <input name="make" value="${esc(item?.make||'')}"></label><label>Model <input name="model" value="${esc(item?.model||'')}"></label><label>Year <input name="year" type="number" value="${item?.year||''}"></label><label>VIN <input name="vin" value="${esc(item?.vin||'')}"></label><label>Status <select name="status"><option value="available">available</option><option value="in_service">in_service</option><option value="maintenance">maintenance</option></select></label><div style="display:flex;gap:8px;margin-top:6px"><button class="btn primary" type="submit">${mode==='edit'?'Save':'Create'}</button><button id="cancelV" class="btn" type="button">Cancel</button></div></form>`;
+      const form = document.getElementById('vehicleForm'); if(item) form.querySelector('select[name="status"]').value = item.status||'available';
+      form.onsubmit = async (e)=>{
+        e.preventDefault();
+        try {
+          const fd=Object.fromEntries(new FormData(form).entries());
+          if(fd.year==='') delete fd.year; else fd.year=Number(fd.year);
+          if(mode==='edit') await update('vehicles', id, fd); else await create('vehicles', fd);
+          loadAndRender();
+          renderForm();
+        } catch (err) {
+          alert('Error saving vehicle: ' + err.message);
+        }
+      };
+      document.getElementById('cancelV').onclick = ()=>renderForm();
+    }
+
+    function renderDriverForm(area, mode, item){ const id = item? (item._id||item.id):''; area.innerHTML = `<h3 style="margin:0 0 8px">${mode==='edit'?'Edit':'Add'} Driver</h3><form id="driverForm" class="form-row"><label>Name <input name="name" value="${esc(item?.name||'')}"></label><label>License Number <input name="licenseNumber" value="${esc(item?.licenseNumber||'')}"></label><label>Phone <input name="phone" value="${esc(item?.phone||'')}"></label><div style="display:flex;gap:8px;margin-top:6px"><button class="btn primary" type="submit">${mode==='edit'?'Save':'Create'}</button><button id="cancelD" class="btn" type="button">Cancel</button></div></form>`;
+      const form = document.getElementById('driverForm');
+      form.onsubmit = async (e)=>{
+        e.preventDefault();
+        try {
+          const fd=Object.fromEntries(new FormData(form).entries());
+          if(mode==='edit') await update('drivers', id, fd); else await create('drivers', fd);
+          loadAndRender();
+          renderForm();
+        } catch (err) {
+          alert('Error saving driver: ' + err.message);
+        }
+      };
+      document.getElementById('cancelD').onclick = ()=>renderForm(); }
+
+    async function renderTripForm(area, mode, item){ const id = item? (item._id||item.id):''; const [vehicles,drivers]=await Promise.all([fetchList('vehicles'),fetchList('drivers')]);
+      area.innerHTML = `<h3 style="margin:0 0 8px">${mode==='edit'?'Edit':'Add'} Trip</h3><form id="tripForm" class="form-row"><label>Vehicle <select name="vehicle">${vehicles.map(v=>`<option value="${v._id||v.id}">${esc(v.make||'')+' '+esc(v.model||'')+' ('+esc(v.vin||'')+')'}</option>`).join('')}</select></label><label>Driver <select name="driver">${drivers.map(d=>`<option value="${d._id||d.id}">${esc(d.name||'')+' ('+esc(d.licenseNumber||'')+')'}</option>`).join('')}</select></label><label>Origin <input name="origin" value="${esc(item?.origin||'')}"></label><label>Destination <input name="destination" value="${esc(item?.destination||'')}"></label><label>Start Time <input name="startTime" type="datetime-local" value="${fmt(item?.startTime||'')}"></label><label>End Time <input name="endTime" type="datetime-local" value="${fmt(item?.endTime||'')}"></label><label>Status <select name="status"><option value="scheduled">scheduled</option><option value="ongoing">ongoing</option><option value="completed">completed</option><option value="cancelled">cancelled</option></select></label><div style="display:flex;gap:8px;margin-top:6px"><button class="btn primary" type="submit">${mode==='edit'?'Save':'Create'}</button><button id="cancelT" class="btn" type="button">Cancel</button></div></form>`;
+      const form = document.getElementById('tripForm');
+      if(item){
+        form.querySelector('select[name="vehicle"]').value = (item.vehicle && (item.vehicle._id||item.vehicle))||'';
+        form.querySelector('select[name="driver"]').value = (item.driver && (item.driver._id||item.driver))||'';
+        form.querySelector('select[name="status"]').value = item.status||'scheduled';
+      }
+      form.onsubmit = async (e)=>{
+        e.preventDefault();
+        try {
+          const fd=Object.fromEntries(new FormData(form).entries());
+          if(fd.startTime==='') delete fd.startTime;
+          if(fd.endTime==='') delete fd.endTime;
+          if(mode==='edit') await update('trips', id, fd); else await create('trips', fd);
+          loadAndRender();
+          renderForm();
+        } catch (err) {
+          alert('Error saving trip: ' + err.message);
+        }
+      };
+      document.getElementById('cancelT').onclick = ()=>renderForm(); }
+
+    // modal
+    function showModal(message, onConfirm){ const mb=document.getElementById('modal'); document.getElementById('modalContent').innerText = message; mb.style.display='flex'; document.getElementById('modalCancel').onclick = hideModal; document.getElementById('modalConfirm').onclick = onConfirm; }
+    function hideModal(){ document.getElementById('modal').style.display='none'; }
+
+    // small utils
+    function esc(s){ if(s===null||s===undefined) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+    function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+    function fmt(dt){ if(!dt) return ''; const d=new Date(dt); if(isNaN(d)) return ''; const pad=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+
+    // initial
+    loadAndRender(); renderForm();
   </script>
 </body>
 </html>

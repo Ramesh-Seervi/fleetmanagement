@@ -50,7 +50,10 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 // error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Server error' });
+  const payload = { message: 'Server error' };
+  // expose error message in non-production for easier debugging
+  if (process.env.NODE_ENV !== 'production' && err && err.message) payload.error = err.message;
+  res.status(500).json(payload);
 });
 
 

@@ -2,7 +2,10 @@ const Driver = require('../models/Driver');
 
 exports.createDriver = async (req, res, next) => {
   try {
-    const driver = await Driver.create(req.body);
+    // sanitize incoming body: do not allow client to set _id or id
+    const payload = { ...req.body };
+    delete payload._id; delete payload.id;
+    const driver = await Driver.create(payload);
     res.status(201).json(driver);
   } catch (err) { next(err); }
 };
@@ -24,7 +27,8 @@ exports.getDriver = async (req, res, next) => {
 
 exports.updateDriver = async (req, res, next) => {
   try {
-    const driver = await Driver.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const payload = { ...req.body }; delete payload._id; delete payload.id;
+    const driver = await Driver.findByIdAndUpdate(req.params.id, payload, { new: true });
     if (!driver) return res.status(404).json({ message: 'Not found' });
     res.json(driver);
   } catch (err) { next(err); }

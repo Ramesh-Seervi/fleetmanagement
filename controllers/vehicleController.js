@@ -2,7 +2,8 @@ const Vehicle = require('../models/Vehicle');
 
 exports.createVehicle = async (req, res, next) => {
   try {
-    const vehicle = await Vehicle.create(req.body);
+    const payload = { ...req.body }; delete payload._id; delete payload.id;
+    const vehicle = await Vehicle.create(payload);
     res.status(201).json(vehicle);
   } catch (err) { next(err); }
 };
@@ -24,7 +25,8 @@ exports.getVehicle = async (req, res, next) => {
 
 exports.updateVehicle = async (req, res, next) => {
   try {
-    const vehicle = await Vehicle.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const payload = { ...req.body }; delete payload._id; delete payload.id;
+    const vehicle = await Vehicle.findByIdAndUpdate(req.params.id, payload, { new: true });
     if (!vehicle) return res.status(404).json({ message: 'Not found' });
     res.json(vehicle);
   } catch (err) { next(err); }
