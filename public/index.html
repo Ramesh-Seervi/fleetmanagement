@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Fleet Management System</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body{font-family:system-ui,Arial;padding:20px;max-width:900px;margin:auto}
+    h1{margin-top:0}
+    .box{padding:12px;border:1px solid #ddd;margin-bottom:12px;border-radius:6px}
+    pre{background:#f6f8fa;padding:10px}
+  </style>
+</head>
+<body>
+  <h1>Fleet Management System</h1>
+  <p>Simple frontend to try API endpoints.</p>
+
+  <div class="box">
+    <h3>Vehicles</h3>
+    <button id="loadVehicles">Load Vehicles</button>
+    <pre id="vehicles"></pre>
+  </div>
+
+  <div class="box">
+    <h3>Drivers</h3>
+    <button id="loadDrivers">Load Drivers</button>
+    <pre id="drivers"></pre>
+  </div>
+
+  <div class="box">
+    <h3>Trips</h3>
+    <button id="loadTrips">Load Trips</button>
+    <pre id="trips"></pre>
+  </div>
+
+  <script>
+    const base = '/api';
+    document.getElementById('loadVehicles').onclick = async () => {
+      const res = await fetch(base + '/vehicles');
+      const data = await res.json();
+      document.getElementById('vehicles').innerText = JSON.stringify(data, null, 2);
+    };
+    document.getElementById('loadDrivers').onclick = async () => {
+      const res = await fetch(base + '/drivers');
+      const data = await res.json();
+      document.getElementById('drivers').innerText = JSON.stringify(data, null, 2);
+    };
+    document.getElementById('loadTrips').onclick = async () => {
+      const res = await fetch(base + '/trips');
+      const data = await res.json();
+      document.getElementById('trips').innerText = JSON.stringify(data, null, 2);
+    };
+  </script>
+</body>
+</html>
