@@ -9,7 +9,7 @@ const driverRoutes = require('./routes/driverRoutes');
 const tripRoutes = require('./routes/tripRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5006;
 
 // middlewares
 app.use(express.json());
